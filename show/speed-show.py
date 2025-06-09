@@ -88,7 +88,7 @@ def main():
                     # Bottom center point
                     points[i] = [(x1 + x2) / 2, y2]
                 
-                points = view_transformer.transform_points(points=points).astype(int)
+            points = view_transformer.transform_points(points=points).astype(int)
             else:
                 points = np.array([])
 
@@ -118,7 +118,7 @@ def main():
                     labels.append(f"#{tracker_id} - {int(speed)} km/h")
                     
                     # Box color customization removed as it's not compatible with supervision 0.16.0
-            
+
             annotated_frame = frame.copy()
             
             # Add a title/info bar

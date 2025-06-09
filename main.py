@@ -151,7 +151,7 @@ def main():
     
     # Video bilgisini al
     try:
-        video_info = sv.VideoInfo.from_video_path(video_path=SOURCE_VIDEO_PATH)
+    video_info = sv.VideoInfo.from_video_path(video_path=SOURCE_VIDEO_PATH)
         logger.info(f"Video yüklendi: {SOURCE_VIDEO_PATH}")
         logger.info(f"Video boyutu: {video_info.resolution_wh}, FPS: {video_info.fps}")
     except Exception as e:
@@ -714,7 +714,7 @@ def main():
                 )
                 
                 # Kareyi video çıktısına yaz
-                sink.write_frame(annotated_frame)
+            sink.write_frame(annotated_frame)
                 
                 # Kareyi ekranda göster
                 cv2.imshow("The Eye of God - Trafik İhlali Tespit Sistemi", annotated_frame)
@@ -746,7 +746,7 @@ def main():
     db.close()
     
     # Açık pencereleri kapat
-    cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

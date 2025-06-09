@@ -7,8 +7,8 @@ import os
 points = []
 image = None
 window_name = "Koordinat Secici"
-point_names = ["Sol Ust", "Sag Ust", "Sag Alt", "Sol Alt"]
-colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]  # BGR renkleri
+point_names = ["Sol Ust", "Sag Ust", "Sag Alt", "Sol Alt", "Sol Orta", "Sag Orta"]
+colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]  # BGR renkleri
 
 def click_event(event, x, y, flags, param):
     """Mouse tıklama olayını yönetir"""
@@ -16,8 +16,8 @@ def click_event(event, x, y, flags, param):
     
     # Sol tıklama olduğunda
     if event == cv2.EVENT_LBUTTONDOWN:
-        # Eğer 4 nokta seçilmediyse
-        if len(points) < 4:
+        # Eğer 6 nokta seçilmediyse
+        if len(points) < 6:
             # Noktayı kaydet
             points.append((x, y))
             print(f"{point_names[len(points)-1]} secildi: ({x}, {y})")
@@ -28,28 +28,31 @@ def click_event(event, x, y, flags, param):
                        (x+10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[len(points)-1], 2)
             cv2.imshow(window_name, image)
             
-            # Eğer 4 nokta seçildiyse sonuçları göster
-            if len(points) == 4:
+            # Eğer 6 nokta seçildiyse sonuçları göster
+            if len(points) == 6:
                 show_results()
 
 def show_results():
     """Seçilen noktaları gösterir ve sonuçları yazdırır"""
     global points, image
     
-    # Dörtgeni çiz
+    # Dörtgeni çiz (ilk 4 nokta için)
     for i in range(4):
         cv2.line(image, points[i], points[(i+1)%4], (0, 255, 255), 2)
+    
+    # Orta noktaları göstermek için çizgiler
+    cv2.line(image, points[4], points[5], (128, 128, 128), 2)  # Sol orta ile sağ orta arası
     
     # Sonuçları ekranda göster
     cv2.imshow(window_name, image)
     
     # Koordinatları konsola yazdır
     print("\nSecilen koordinatlar:")
-    print(f"SOURCE = np.array([{points[0]}, {points[1]}, {points[2]}, {points[3]}])")
+    print(f"SOURCE = np.array([{points[0]}, {points[1]}, {points[2]}, {points[3]}, {points[4]}, {points[5]}])")
     
     # Koordinatları metin dosyasına kaydet
     with open("koordinatlar.txt", "w") as f:
-        f.write(f"SOURCE = np.array([{points[0]}, {points[1]}, {points[2]}, {points[3]}])\n")
+        f.write(f"SOURCE = np.array([{points[0]}, {points[1]}, {points[2]}, {points[3]}, {points[4]}, {points[5]}])\n")
     
     print("\nKoordinatlar 'koordinatlar.txt' dosyasına kaydedildi.")
     print("Programdan çıkmak için herhangi bir tuşa basın.")
@@ -80,12 +83,14 @@ def main():
     cv2.setMouseCallback(window_name, click_event)
     
     # Talimatları göster
-    instructions = np.zeros((150, 600, 3), dtype=np.uint8)
+    instructions = np.zeros((200, 600, 3), dtype=np.uint8)
     cv2.putText(instructions, "Talimatlar:", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     cv2.putText(instructions, "1. Sol Ust koseyi secin", (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[0], 2)
     cv2.putText(instructions, "2. Sag Ust koseyi secin", (20, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[1], 2)
     cv2.putText(instructions, "3. Sag Alt koseyi secin", (20, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[2], 2)
     cv2.putText(instructions, "4. Sol Alt koseyi secin", (20, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[3], 2)
+    cv2.putText(instructions, "5. Sol Orta noktayi secin", (20, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[4], 2)
+    cv2.putText(instructions, "6. Sag Orta noktayi secin", (20, 185), cv2.FONT_HERSHEY_SIMPLEX, 0.6, colors[5], 2)
     cv2.imshow("Talimatlar", instructions)
     
     # Resmi göster
