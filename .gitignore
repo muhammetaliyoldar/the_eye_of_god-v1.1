@@ -1,0 +1,30 @@
+# Ignore generated directories
+database/
+outputs/
+
+# Ignore video files
+*.mp4
+
+# Ignore model files
+*.pt
+
+# Ignore virtual environment
+.venv/
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore specific generated files
+*.db
+*.log
+
+# Ignore other system files
+.DS_Store
+Thumbs.db
+
+# Ignore screenshot script
+take_screenshots.py
+
+# Ignore application files that should not be public
+app.py 
