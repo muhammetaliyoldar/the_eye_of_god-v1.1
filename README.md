@@ -1,110 +1,126 @@
-# The Eye of God - Trafik İhlali Tespit Sistemi
+# The Eye of God - AI-Powered Traffic Violation Detection System
 
-Yapay zeka destekli, gerçek zamanlı trafik ihlali tespit ve arşivleme sistemi.
+An advanced, real-time traffic analysis and violation detection system built on state-of-the-art computer vision models.
 
-## Özellikler
+> **Note:** This project is currently under active development. Features are being continuously improved, and the system is evolving. The documentation reflects the current state but is subject to change.
 
-- **Trafik Işığı İhlali Tespiti**: Kırmızı veya sarı ışıkta geçen araçları tespit eder
-- **Hız İhlali Tespiti**: Matris dönüşümü ile araç hızlarını ölçer ve limit aşımlarını kaydeder
-- **Plaka Tanıma**: Tesseract OCR ile Türk plakalarını yüksek doğrulukta okur
-- **Detaylı Arşivleme**: Her ihlal için kanıt görüntüsü ve detaylı bilgi kaydı oluşturur
-- **Veritabanı Takibi**: Tüm araç ve ihlal bilgilerinin SQLite veritabanında saklanması
-- **Gerçek Zamanlı Görselleştirme**: Akan videoda tespit, izleme ve ölçüm bilgilerinin gösterimi
+## Core Features
 
-## Sistem Gereksinimleri
+- **Multi-Violation Detection**: Identifies both traffic light violations (running red/yellow lights) and speeding infractions.
+- **High-Precision Recognition**: Utilizes a dual-YOLOv8 model strategy for robust vehicle/light detection and specialized, high-accuracy license plate reading.
+- **Custom-Trained Models**: The AI models were trained on a custom dataset collected by drone, achieving over 97.3% mAP for superior performance in real-world scenarios.
+- **Real-time Speed Estimation**: Calculates the speed of tracked vehicles with high accuracy using perspective transformation from a calibrated matrix.
+- **Automated Evidence Archiving**: Automatically saves detailed image evidence of violations, including vehicle type, speed, and license plate.
+- **SQLite Database Integration**: Logs all detected vehicles and violations for data analysis and record-keeping.
 
-- Python 3.8-3.10 (3.10 önerilen)
-- CUDA destekli NVIDIA GPU (önerilen)
-- Tesseract OCR (Windows: C:\Program Files\Tesseract-OCR)
-- Yeterli RAM (en az 8GB, 16GB önerilen)
+## Showcase
 
-## Kurulum
+Here are some sample outputs from the project, demonstrating the system's capabilities in different scenarios.
 
-### 1. Ortam Hazırlığı
+### Vehicle Detection, Speed Estimation & Classification
+These images show the system detecting vehicles, tracking them with unique IDs, estimating their real-time speed, and classifying their type (e.g., Car, Truck).
 
-Sanal ortam oluşturun (opsiyonel ama önerilir):
-```bash
-# Windows
-python -m venv .venv
-.venv\Scripts\activate
+<table align="center">
+<tr>
+    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (1).png" alt="Speed and Classification 1" width="100%"></td>
+    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (2).png" alt="Speed and Classification 2" width="100%"></td>
+</tr>
+<tr>
+    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (3).png" alt="Speed and Classification 3" width="100%"></td>
+    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (4).png" alt="Speed and Classification 4" width="100%"></td>
+</tr>
+</table>
 
-# Linux/macOS
-python -m venv .venv
-source .venv/bin/activate
-```
+### License Plate & Traffic Light Detection
+This section demonstrates the detection of license plates and the status of traffic lights, which are crucial for identifying violations.
 
-### 2. Bağımlılıkları Yükleme
+<table align="center">
+<tr>
+    <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights (1).png" alt="License Plate and Traffic Lights 1" width="100%"></td>
+    <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights (2).png" alt="License Plate and Traffic Lights 2" width="100%"></td>
+</tr>
+</table>
 
-```bash
-pip install -r requirements.txt
-```
+### Violation Evidence Output
+When a violation is detected, the system saves detailed evidence. These images are examples of the final output files, showing the offending vehicle, its license plate, speed, and the violation type.
 
-### 3. YOLOv8 Modellerini Kontrol Edin
+<table align="center">
+<tr>
+    <td><img src="show/screenshots/outputs/outputs (1).png" alt="Output Evidence 1" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (2).png" alt="Output Evidence 2" width="100%"></td>
+</tr>
+<tr>
+    <td><img src="show/screenshots/outputs/outputs (3).png" alt="Output Evidence 3" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (4).png" alt="Output Evidence 4" width="100%"></td>
+</tr>
+</table>
 
-models/ klasöründe aşağıdaki dosyaların bulunduğundan emin olun:
-- yolov8x.pt (araç tespiti için)
-- yolov8y.pt (trafik ışığı ve plaka tespiti için)
+## Model Training & Strategy
 
-Eksik modelleri [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) sitesinden indirebilirsiniz.
+The high performance of this system is a direct result of a meticulous, custom training process.
 
-### 4. Tesseract OCR Kurulumu
+1.  **Data Collection**: A unique dataset was created by recording high-resolution video footage of traffic intersections using a drone.
+2.  **Frame Extraction & Annotation**: The video was decomposed into thousands of individual frames. These frames were then painstakingly annotated with the following classes: `car`, `truck`, `bus`, `motorcycle`, `green traffic light`, `red traffic light`, `yellow traffic light`, and `license plate`.
+3.  **Model Selection & Training**: Several architectures were evaluated, including YOLOv12. However, **YOLOv8** was selected for its superior balance of speed and accuracy on this specific task. The model was trained on the custom dataset in a local environment, achieving the following benchmark scores:
+    *   **mAP50-95:** 0.973
+    *   **F1-Score:** 0.96
+4.  **Dual-Model Strategy**: To maximize accuracy, two separate YOLOv8 models are used:
+    *   **General Detection Model**: A robust model trained on all classes for general scene understanding (vehicle tracking, traffic light status).
+    *   **Specialized Plate Model**: A second model fine-tuned exclusively on license plate data. This ensures extremely high precision in license plate recognition, which is critical for evidence generation.
 
-- **Windows**: [Tesseract OCR for Windows](https://github.com/UB-Mannheim/tesseract/wiki) adresinden indirip kurun
-- **Linux**: `sudo apt install tesseract-ocr`
-- **macOS**: `brew install tesseract`
+## Project Structure
 
-### 5. Olası Sorunlar ve Çözümleri
-
-#### YOLOv8 Model Yükleme Sorunları
-
-Program birden fazla yükleme yöntemi deneyerek modelleri otomatik olarak yüklemeye çalışır:
-1. `ultralytics.YOLO` ile doğrudan yükleme
-2. `ultralytics.models.YOLO` alternatif yolu
-3. `torch.hub.load` yöntemi
-4. Başarısız olursa mock modelleri kullanma
-
-Modeller hala yüklenemiyorsa:
-
-```bash
-# Ultralytics paketini yeniden yükleyin
-pip uninstall ultralytics
-pip install ultralytics==8.0.225
-
-# Torch ve torchvision'ı yeniden yükleyin (CUDA 11.8 için)
-pip uninstall torch torchvision
-pip install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cu118
-```
-
-## Sistemi Çalıştırma
-
-```bash
-python main.py
-```
-
-## Proje Yapısı
+The project is organized as follows:
 
 ```
 the_eye_of_god-v1.1/
-├── models/                # YOLOv8 modelleri
-├── video-data/            # Test ve ana video dosyaları
-├── outputs/               # İhlal kayıtları ve log dosyaları
-├── database/              # SQLite veritabanı
-├── utils/                 # Yardımcı fonksiyonlar
-├── main.py                # Ana program
-├── README.md              # Bu dosya
-├── PRD.md                 # Ürün gereksinim belgesi
-├── LICENSE                # MIT Lisansı
-└── requirements.txt       # Gerekli paketler
+├── database/              # SQLite database files
+├── evidence/              # Stores violation evidence sub-folders
+├── models/                # Pre-trained YOLOv8 models (not in repo)
+├── outputs/               # General output files (e.g., processed videos)
+├── show/                  # Assets for documentation (screenshots)
+├── utils/                 # Helper scripts and utility functions
+├── video-data/            # Raw video files (not in repo)
+├── .gitignore             # Specifies intentionally untracked files
+├── main.py                # Main application script
+├── PRD.md                 # Product Requirements Document
+├── README.md              # This file
+└── requirements.txt       # Python package requirements
 ```
 
-## Kalibrasyonlar
+## System & Calibration
 
-Matris koordinatları:
-- `[856, 247], [1179, 245], [1917, 820], [288, 841]`
+### System Requirements
+- Python 3.8-3.10
+- PyTorch & CUDA-enabled GPU (recommended for performance)
+- Tesseract OCR
 
-Trafik ışığı ihlal çizgisi:
-- `[856, 247]` ile `[1179, 245]` arasındaki sanal çizgi
+### Calibration Matrix
+The system uses a perspective transformation matrix for accurate speed calculation. The source points for this matrix are:
+`[(912, 215), (1321, 209), (1918, 608), (424, 610), (653, 430), (1642, 427)]`
 
-## Lisans
+## Installation
 
-Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın. 
+```bash
+# Clone the repository
+git clone https://github.com/muhammetaliyoldar/the_eye_of_god-v1.1.git
+cd the_eye_of_god-v1.1
+
+# Create and activate a virtual environment
+python -m venv .venv
+# On Windows: .venv\Scripts\activate
+# On macOS/Linux: source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Access to Data & Models
+
+The custom-collected video dataset and the final trained model weights (`.pt` files) are not included in this repository due to their large size. If you are interested in accessing these assets for research, collaboration, or evaluation purposes, please reach out.
+
+- **Email**: `muhammetaliyoldar@gmail.com`
+- **LinkedIn**: `https://www.linkedin.com/in/muhammet-ali-yoldar/`
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details. 

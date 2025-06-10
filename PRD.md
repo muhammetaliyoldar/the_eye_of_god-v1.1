@@ -1,120 +1,131 @@
-# Ürün Gereksinim Belgesi (PRD) - The Eye of God
+# Product Requirements Document (PRD) - The Eye of God
 
-## 1. Giriş
+**Author**: [Your Name/Team Name]
+**Status**: In Development
+**Last Updated**: [Current Date]
 
-"The Eye of God" (Tanrının Gözü), yapay zeka destekli bir trafik ihlali tespit sistemidir. Sistem, trafik kameralarından alınan görüntüleri analiz ederek trafik ışığı ihlallerini ve hız sınırı aşımlarını tespit eder, kaydeder ve arşivler.
+---
 
-## 2. Ürün Amacı
+## 1. Introduction & Vision
 
-Trafik güvenliğini artırmak ve trafik kurallarına uyumu teşvik etmek için:
-- Trafik ışığı ihlallerini (kırmızı veya sarı ışıkta geçiş) tespit etmek
-- Araç hızlarını ölçerek hız sınırı aşımlarını belirlemek
-- Tespit edilen ihlalleri kanıtlarıyla birlikte arşivlemek
-- Trafik denetimlerini daha etkin ve adil hale getirmek
+"The Eye of God" is an AI-powered traffic analysis system designed to autonomously detect and document traffic violations. By leveraging custom-trained deep learning models, the system aims to provide a reliable, efficient, and scalable solution for improving traffic safety and enforcing regulations. This document outlines the product requirements for the system, which is currently in an active development phase.
 
-## 3. Hedef Kullanıcılar
+## 2. Core Objectives & Goals
 
-- Trafik Denetim Birimleri
-- Belediye Trafik Yönetim Merkezleri
-- Karayolları Genel Müdürlüğü
-- Akıllı Şehir Yönetim Sistemleri
+- **Primary Goal**: To accurately detect traffic light and speeding violations in real-time from video feeds.
+- **Secondary Goal**: To create a robust, verifiable evidence package for each detected violation.
+- **Business Goal**: To provide a foundational technology for smart city infrastructure, targeting municipalities and traffic enforcement agencies.
+- **Technical Goal**: To continuously improve model accuracy and expand the system's capabilities to include other violation types.
 
-## 4. Sistem Bileşenleri
+## 3. Target Audience
 
-### 4.1 Girdi Kaynakları
+- **Primary Users**: Traffic Enforcement Agencies, Municipal Police Departments.
+- **Secondary Users**: Smart City System Integrators, Urban Planning Departments, Transportation Researchers.
 
-- **Video Kaynağı**: 4K çözünürlükte, 30 FPS hızında trafik kamera görüntüleri
-- **AI Modelleri**:
-  - YOLOv8x: Araç tespiti ve sınıflandırması
-  - YOLOv8y: Trafik ışığı ve plaka bölgesi tespiti
-- **OCR Motoru**: Tesseract OCR (Türkçe desteği ile)
+## 4. Features & Scope
 
-### 4.2 Temel Fonksiyonlar
+### 4.1. Core Functionality (Current Implementation)
+- **Real-time Video Processing**: Ingests and analyzes 4K video streams.
+- **Vehicle Detection & Tracking**: Identifies cars, trucks, buses, and motorcycles, assigning a persistent ID to each.
+- **Traffic Light State Recognition**: Detects traffic lights and accurately determines their state (red, yellow, green).
+- **License Plate Recognition**: A specialized model detects and reads license plates with high precision.
+- **Speed Estimation**: Calculates vehicle speed using a calibrated perspective transformation.
+- **Violation Logic**: Flags violations based on pre-defined rules (e.g., crossing a line on red, exceeding the speed limit).
+- **Evidence Generation**: Saves a snapshot image and a text file with violation details (plate, speed, timestamp, etc.).
+- **Database Logging**: Records all events in an SQLite database.
 
-#### Tespit ve Tanıma
-- Araç tespiti ve sınıflandırması (otomobil, kamyon, motosiklet, vb.)
-- Trafik ışığı tespiti ve renk analizi
-- Plaka bölgesi tespiti ve OCR ile plaka okuması
-- Araç takibi ve benzersiz ID atama
+### 4.2. Future Development (Roadmap)
+- Multi-camera support for comprehensive intersection coverage.
+- A web-based dashboard for reviewing violations and analytics.
+- Expansion to other violation types (e.g., illegal lane changes, parking violations).
+- Cloud-based deployment for enhanced scalability.
 
-#### İhlal Analizi
-- Trafik ışığı ihlali (kırmızı/sarı ışıkta geçiş) tespiti
-- Matris dönüşümü ile araç hızı hesaplama
-- Araç türüne göre hız limiti kontrolü
-- İhlal durumunda kanıt oluşturma
+## 5. Technical Architecture & Stack
 
-#### Veri Yönetimi
-- İhlal kayıtlarının yapılandırılmış dosyalama sistemi
-- SQLite veritabanında araç ve ihlal bilgilerinin saklanması
-- Türkiye plaka sistemine uygun il eşleştirmesi
+### 5.1. AI & Computer Vision
+- **Core Architecture**: Dual YOLOv8 models.
+  - **Model 1 (General):** Trained on a comprehensive custom dataset for detecting vehicles and traffic lights.
+  - **Model 2 (Specialized):** Fine-tuned specifically for high-accuracy license plate detection.
+- **OCR Engine**: Tesseract OCR for converting license plate images to text.
+- **Core Libraries**: OpenCV, PyTorch, NumPy, Supervision.
 
-#### Görselleştirme
-- Gerçek zamanlı tespit ve izleme görselleştirmesi
-- Araç bilgilerinin ve hız değerlerinin ekranda gösterimi
-- Trafik ışığı durumunun renk paletiyle gösterimi
+### 5.2. Data Management
+- **Database**: SQLite for local, structured data logging.
+- **File System**: A structured `evidence/` directory to store image and text files for each violation, organized by license plate.
 
-## 5. Teknik Gereksinimler
+### 5.3. System & Environment
+- **Language**: Python 3.10
+- **Environment**: Virtual environment with dependencies managed via `requirements.txt`.
+- **Recommended Hardware**: CUDA-enabled NVIDIA GPU (for real-time performance).
 
-### 5.1 Donanım
-- CUDA destekli NVIDIA GPU (Minimum 6GB VRAM)
-- 16GB+ RAM
-- 500GB+ depolama alanı (video arşivi için)
+## 6. System Requirements & Performance
 
-### 5.2 Yazılım
-- Python 3.10
-- YOLOv8 modelleri
-- Tesseract OCR (Türkçe dil paketi ile)
-- CUDA ve cuDNN (GPU kullanımı için)
-- OpenCV, NumPy, PyTorch
+- **Input**: 4K video stream @ 30 FPS.
+- **Processing Target**: Minimum 25 FPS on recommended hardware.
+- **Model Accuracy**:
+  - **mAP50-95 (Overall):** > 97%
+  - **License Plate Recognition Accuracy:** > 95% (end-to-end OCR).
+- **Data Integrity**: All generated evidence must be timestamped and securely stored.
 
-### 5.3 Performans Gereksinimleri
-- 4K video akışında gerçek zamanlı işleme (minimum 25 FPS)
-- %95+ araç tespit doğruluğu
-- %90+ plaka okuma doğruluğu
-- %98+ trafik ışığı renk analizi doğruluğu
+## 7. Data & Models Access
 
-## 6. İhlal Tespit Kriterleri
+The proprietary dataset (drone footage) and trained model weights are not publicly available in the repository. Access can be granted for academic or collaborative purposes by contacting the project owner.
 
-### 6.1 Trafik Işığı İhlali
-- Işık durumu yeşil olmadığında (kırmızı, sarı veya kırmızı+sarı) sanal çizgiyi geçen araçlar
-- Sanal çizgi: [856, 247] ile [1179, 245] koordinatları arası
-- Işık rengi HSV analizi ile doğrulanacak
+- **Contact Email**: `muhammetaliyoldar@gmail.com`
+- **Contact LinkedIn**: `https://www.linkedin.com/in/muhammet-ali-yoldar/`
 
-### 6.2 Hız İhlali
-- Şehir içi hız limitleri:
-  - Otomobil: 50 km/h
-  - Motosiklet: 50 km/h
-  - Kamyonet: 50 km/h
-  - Kamyon: 40 km/h
-  - Otobüs: 50 km/h
-- Matris koordinatları kullanılarak perspektif dönüşümü yapılacak
-- En az 3 saniye takip edilen araçlar için hız hesaplanacak
+## 8. Assumptions & Dependencies
 
-## 7. Çıktı Formatları
+- The system requires a fixed-camera perspective for the calibration matrix to be valid.
+- Performance is highly dependent on the available hardware, particularly the GPU.
+- Tesseract OCR must be installed on the host system.
 
-### 7.1 İhlal Kaydı Dosya Yapısı
+## 9. Violation Detection Criteria
+
+### 9.1 Traffic Light Violation
+- Vehicles crossing the virtual line when the light is not green (red, yellow, or red+yellow).
+- Virtual line: Between coordinates [856, 247] and [1179, 245].
+- Light color to be verified by HSV analysis.
+
+### 9.2 Speeding Violation
+- Urban speed limits:
+  - Car: 50 km/h
+  - Motorcycle: 50 km/h
+  - Van: 50 km/h
+  - Truck: 40 km/h
+  - Bus: 50 km/h
+- Perspective transformation will be applied using matrix coordinates.
+- Speed will be calculated for vehicles tracked for at least 3 seconds.
+
+## 10. Output Formats
+
+### 10.1 Violation Record File Structure
 ```
-ihlal_kayitlari/
-└── [PLAKA]/
-    ├── ihlal_[ID]_[TARIH]_[SAAT].jpg  # İhlal anı görüntüsü
-    └── ihlal_[ID]_[TARIH]_[SAAT].txt  # İhlal detayları
+violation_records/
+└── [LICENSE_PLATE]/
+    ├── violation_[ID]_[DATE]_[TIME].jpg  # Violation snapshot
+    └── violation_[ID]_[DATE]_[TIME].txt  # Violation details
 ```
 
-### 7.2 Veritabanı Şeması
+### 10.2 Database Schema
 - **vehicles**: id, plate, city, vehicle_type, first_seen, last_seen
 - **violations**: id, vehicle_id, violation_type, speed, speed_limit, light_color, timestamp, evidence_path
 
-## 8. Uygulama Süreci
+## 11. Implementation Process
 
-1. Test videosu ile sistem kalibrasyonu
-2. Gerçek trafik kameralarına entegrasyon
-3. 3 aylık pilot uygulama
-4. Tam ölçekli uygulamaya geçiş
+1. System calibration with a test video.
+2. Integration with real traffic cameras.
+3. 3-month pilot implementation.
+4. Transition to full-scale deployment.
 
-## 9. Genişletme Planları
+## 12. Expansion Plans
 
-- Çoklu kamera desteği
-- Bulut tabanlı merkezi sistem
-- Web arayüzü ve mobil uygulama
-- Yapay zeka modellerinin sürekli iyileştirilmesi
-- Ek ihlal türlerinin tespiti (emniyet şeridi ihlali, park ihlali vb.) 
+- Multi-camera support.
+- Cloud-based central system.
+- Web interface and mobile application.
+- Continuous improvement of AI models.
+- Detection of additional violation types (emergency lane violation, parking violation, etc.).
+
+## 13. Additional Information
+
+This document has been prepared to detail the scope and requirements of "The Eye of God" project. The project was developed to increase traffic safety and detect violations more effectively. For more information, please contact the project manager. 
