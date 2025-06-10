@@ -41,17 +41,18 @@ This section demonstrates the detection of license plates and the status of traf
 </tr>
 </table>
 
-### Violation Evidence Output
+### Violation Evidence
+
 When a violation is detected, the system saves detailed evidence. These images are examples of the final output files, showing the offending vehicle, its license plate, speed, and the violation type.
 
 <table align="center">
 <tr>
-    <td><img src="show/screenshots/outputs/outputs (2).png" alt="Output Evidence 1" width="100%"></td>
-    <td><img src="show/screenshots/outputs/outputs (1).png" alt="Output Evidence 2" width="100%"></td>
+    <td><img src="show\screenshots\final\final (1).png" alt="Output Evidence 1" width="100%"></td>
+    <td><img src="show\screenshots\final\final (2).png" alt="Output Evidence 2" width="100%"></td>
 </tr>
 <tr>
-    <td><img src="show/screenshots/outputs/outputs (4).png" alt="Output Evidence 3" width="100%"></td>
-    <td><img src="show/screenshots/outputs/outputs (3).png" alt="Output Evidence 4" width="100%"></td>
+    <td><img src="show\screenshots\final\final (3).png" alt="Output Evidence 3" width="100%"></td>
+    <td><img src="show\screenshots\final\final (4).png" alt="Output Evidence 4" width="100%"></td>
 </tr>
 </table>
 
