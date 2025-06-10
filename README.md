@@ -46,12 +46,12 @@ When a violation is detected, the system saves detailed evidence. These images a
 
 <table align="center">
 <tr>
-    <td><img src="show/screenshots/outputs/outputs (1).png" alt="Output Evidence 1" width="100%"></td>
-    <td><img src="show/screenshots/outputs/outputs (2).png" alt="Output Evidence 2" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (2).png" alt="Output Evidence 1" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (1).png" alt="Output Evidence 2" width="100%"></td>
 </tr>
 <tr>
-    <td><img src="show/screenshots/outputs/outputs (3).png" alt="Output Evidence 3" width="100%"></td>
-    <td><img src="show/screenshots/outputs/outputs (4).png" alt="Output Evidence 4" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (4).png" alt="Output Evidence 3" width="100%"></td>
+    <td><img src="show/screenshots/outputs/outputs (3).png" alt="Output Evidence 4" width="100%"></td>
 </tr>
 </table>
 
