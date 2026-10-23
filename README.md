@@ -1,127 +1,136 @@
-# The Eye of God - AI-Powered Traffic Violation Detection System
+# The Eye of God: Traffic Violation Detection
 
-An advanced, real-time traffic analysis and violation detection system built on state-of-the-art computer vision models.
+A Python and computer‑vision prototype that analyzes fixed‑angle traffic video to detect **red/yellow‑light** and **speeding** violations. It detects vehicles with YOLOv8 (Ultralytics), tracks them with ByteTrack (Supervision), estimates speed through a perspective (homography) transform, reads Turkish license plates with Tesseract OCR, and logs vehicles and violations to SQLite together with image and text evidence.
 
-> **Note:** This project is currently under active development. Features are being continuously improved, and the system is evolving. The documentation reflects the current state but is subject to change.
+> **Status:** prototype or work in progress. Model weights and the source video are not in the repository, and the committed `main.py` has syntax errors (see [Project Status](#project-status)).
 
-## Core Features
+## Features
 
-- **Multi-Violation Detection**: Identifies both traffic light violations (running red/yellow lights) and speeding infractions.
-- **High-Precision Recognition**: Utilizes a dual-YOLOv8 model strategy for robust vehicle/light detection and specialized, high-accuracy license plate reading.
-- **Custom-Trained Models**: The AI models were trained on a custom dataset collected by drone, achieving over 97.3% mAP for superior performance in real-world scenarios.
-- **Real-time Speed Estimation**: Calculates the speed of tracked vehicles with high accuracy using perspective transformation from a calibrated matrix.
-- **Automated Evidence Archiving**: Automatically saves detailed image evidence of violations, including vehicle type, speed, and license plate.
-- **SQLite Database Integration**: Logs all detected vehicles and violations for data analysis and record-keeping.
+- **Vehicle detection and tracking**: a YOLOv8 model (`models/yolov8x.pt`) with `sv.ByteTrack`. Vehicles are filtered to `car`, `truck`, `bus` and `motorcycle` using COCO class IDs.
+- **Traffic lights and license plates**: a second YOLOv8 model (`models/yolov8y.pt`) detects traffic lights and plates (class IDs 9 and 1 in `main.py`). An HSV‑based `TrafficLightColorDetector` (`utils/color_detection.py`) determines the light colour, and red+yellow is treated as red.
+- **Speed estimation**: `utils/speed_estimation.py` maps tracked points to a bird's‑eye plane via `cv2.getPerspectiveTransform` and converts displacement over time to km/h. Default limits: 50 km/h (car, bus, motorcycle) and 40 km/h (truck).
+- **Violation logic**: `utils/violation_check.py` covers red‑light crossing of a stop line (`CROSS_LINE`), yellow‑light crossing and speeding, and suppresses duplicate reports per vehicle.
+- **Plate OCR**: `utils/ocr.py` runs preprocessing (grayscale, blur, adaptive threshold) followed by Tesseract, cleans the text into the Turkish plate format and maps the province code (01–81) to a city name.
+- **Evidence and logging**: saves a JPG and TXT per violation under `outputs/ihlal_kayitlari/<plate>/` and writes `vehicles` / `violations` tables to `database/violations.db` (SQLite). Application logs go to `outputs/logs/application.log`.
+- **Mock fallback**: if the YOLO weights cannot be loaded, `utils/mock_models.py` supplies random detections so that the pipeline can still be exercised.
 
-## Showcase
+## Screenshots
 
-Here are some sample outputs from the project, demonstrating the system's capabilities in different scenarios.
+Annotated frames from the drone/elevated test footage (the files are in `show/screenshots/`).
 
-### Vehicle Detection, Speed Estimation & Classification
-These images show the system detecting vehicles, tracking them with unique IDs, estimating their real-time speed, and classifying their type (e.g., Car, Truck).
+**Speed estimation and vehicle classification**
 
-<table align="center">
+<table>
 <tr>
-    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (1).png" alt="Speed and Classification 1" width="100%"></td>
-    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (2).png" alt="Speed and Classification 2" width="100%"></td>
-</tr>
-<tr>
-    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (3).png" alt="Speed and Classification 3" width="100%"></td>
-    <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation (4).png" alt="Speed and Classification 4" width="100%"></td>
+  <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation%20(1).png" width="100%"></td>
+  <td><img src="show/screenshots/speed-car_calissificiation/speed-car_calissificiation%20(2).png" width="100%"></td>
 </tr>
 </table>
 
-### License Plate & Traffic Light Detection
-This section demonstrates the detection of license plates and the status of traffic lights, which are crucial for identifying violations.
+**License plate and traffic‑light detection**
 
-<table align="center">
+<table>
 <tr>
-    <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights (1).png" alt="License Plate and Traffic Lights 1" width="100%"></td>
-    <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights (2).png" alt="License Plate and Traffic Lights 2" width="100%"></td>
+  <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights%20(1).png" width="100%"></td>
+  <td><img src="show/screenshots/lisence_plate-traffic_lights/lisence_plate-traffic_lights%20(2).png" width="100%"></td>
 </tr>
 </table>
 
-### Violation Evidence
+**Combined output**
 
-When a violation is detected, the system saves detailed evidence. These images are examples of the final output files, showing the offending vehicle, its license plate, speed, and the violation type.
-
-<table align="center">
+<table>
 <tr>
-    <td><img src="show\screenshots\final\final (1).png" alt="Output Evidence 1" width="100%"></td>
-    <td><img src="show\screenshots\final\final (2).png" alt="Output Evidence 2" width="100%"></td>
-</tr>
-<tr>
-    <td><img src="show\screenshots\final\final (3).png" alt="Output Evidence 3" width="100%"></td>
-    <td><img src="show\screenshots\final\final (4).png" alt="Output Evidence 4" width="100%"></td>
+  <td><img src="show/screenshots/final/final%20(1).png" width="100%"></td>
+  <td><img src="show/screenshots/final/final%20(2).png" width="100%"></td>
 </tr>
 </table>
 
-## Model Training & Strategy
+## Data and Models
 
-The high performance of this system is a direct result of a meticulous, custom training process.
+- **Video**: the scripts expect `video-data/test-video.mp4`. `*.mp4` is git‑ignored, so the video is **not** in the repository. `video-data/kordinat.png` is a reference frame used for calibration.
+- **Weights**: `models/yolov8x.pt` (vehicles) and `models/yolov8y.pt` (traffic lights and plates). `*.pt` is git‑ignored, so the weights are **not** in the repository.
+- **Training**: according to the previous version of this README, the models were trained on frames extracted from drone footage of intersections, annotated with `car`, `truck`, `bus`, `motorcycle`, `green/red/yellow traffic light` and `license plate`. It also reported mAP50‑95 = 0.973 and F1 = 0.96. Neither the training code nor the logs, metrics or dataset are in this repository, so those figures cannot be verified here.
 
-1.  **Data Collection**: A unique dataset was created by recording high-resolution video footage of traffic intersections using a drone.
-2.  **Frame Extraction & Annotation**: The video was decomposed into thousands of individual frames. These frames were then painstakingly annotated with the following classes: `car`, `truck`, `bus`, `motorcycle`, `green traffic light`, `red traffic light`, `yellow traffic light`, and `license plate`.
-3.  **Model Selection & Training**: Several architectures were evaluated, including YOLOv12. However, **YOLOv8** was selected for its superior balance of speed and accuracy on this specific task. The model was trained on the custom dataset in a local environment, achieving the following benchmark scores:
-    *   **mAP50-95:** 0.973
-    *   **F1-Score:** 0.96
-4.  **Dual-Model Strategy**: To maximize accuracy, two separate YOLOv8 models are used:
-    *   **General Detection Model**: A robust model trained on all classes for general scene understanding (vehicle tracking, traffic light status).
-    *   **Specialized Plate Model**: A second model fine-tuned exclusively on license plate data. This ensures extremely high precision in license plate recognition, which is critical for evidence generation.
+The author offers access to the video and weights for research or collaboration on request: muhammetaliyoldar@gmail.com · [LinkedIn](https://www.linkedin.com/in/muhammet-ali-yoldar/).
+
+## Calibration
+
+| Item | Value | Where |
+|------|-------|-------|
+| Perspective source polygon (4 points) | `[(941,228), (1284,219), (1905,647), (451,718)]` | `main.py`, `app-2.py`, `show/*.py` |
+| Real‑world target size | 20 × 30 (`main.py`), 11 × 25 (`app-2.py`, show scripts) | `TARGET_WIDTH/HEIGHT` |
+| Stop line | `[[856,247], [1179,245]]` | `main.py` `CROSS_LINE` |
+| 6‑point picker output | `[(912,215), (1321,209), (1918,608), (424,610), (653,430), (1642,427)]` | `koordinatlar.txt` (from `show/coordinate_picker.py`) |
+
+The points are specific to the test video. For a new camera, select the points again with `show/coordinate_picker.py`.
+
+## Tech Stack
+
+Python · Ultralytics YOLOv8 (`ultralytics==8.0.225`) · Supervision 0.16 (ByteTrack, annotators, `PolygonZone`) · OpenCV · PyTorch 2.0.1 · pytesseract / Tesseract OCR · NumPy · pandas · SQLite.
+
+`requirements.txt` also lists `deep_sort_realtime`, `imutils` and `scikit-image`, but none of the committed code imports them.
 
 ## Project Structure
 
-The project is organized as follows:
-
 ```
 the_eye_of_god-v1.1/
-├── database/              # SQLite database files
-├── evidence/              # Stores violation evidence sub-folders
-├── models/                # Pre-trained YOLOv8 models (not in repo)
-├── outputs/               # General output files (e.g., processed videos)
-├── show/                  # Assets for documentation (screenshots)
-├── utils/                 # Helper scripts and utility functions
-├── video-data/            # Raw video files (not in repo)
-├── .gitignore             # Specifies intentionally untracked files
-├── main.py                # Main application script
-├── PRD.md                 # Product Requirements Document
-├── README.md              # This file
-└── requirements.txt       # Python package requirements
+├── main.py                 # full pipeline: detection, tracking, speed, light, OCR, violations, DB
+├── app-2.py                # standalone plate + traffic-light + speed demo (single model, yolov8y.pt)
+├── show/
+│   ├── speed-show.py       # speed + vehicle class demo (yolov8x.pt)
+│   ├── lisenceplate-trafficlight-show.py
+│   ├── coordinate_picker.py  # click 6 calibration points on a frame
+│   └── screenshots/        # images used in this README
+├── utils/
+│   ├── speed_estimation.py   homography_utils.py   color_detection.py
+│   ├── violation_check.py    database.py           ocr.py
+│   └── mock_models.py
+├── video-data/kordinat.png # calibration reference frame
+├── koordinatlar.txt        # picked calibration points
+├── PRD.md                  # product requirements document
+├── requirements.txt
+└── LICENSE                 # MIT
 ```
 
-## System & Calibration
-
-### System Requirements
-- Python 3.8-3.10
-- PyTorch & CUDA-enabled GPU (recommended for performance)
-- Tesseract OCR
-
-### Calibration Matrix
-The system uses a perspective transformation matrix for accurate speed calculation. The source points for this matrix are:
-`[(912, 215), (1321, 209), (1918, 608), (424, 610), (653, 430), (1642, 427)]`
+Generated at runtime and git‑ignored: `outputs/`, `database/`, `*.db`, `*.log`.
 
 ## Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/muhammetaliyoldar/the_eye_of_god-v1.1.git
 cd the_eye_of_god-v1.1
-
-# Create and activate a virtual environment
 python -m venv .venv
-# On Windows: .venv\Scripts\activate
-# On macOS/Linux: source .venv/bin/activate
-
-# Install dependencies
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Access to Data & Models
+You also need the following:
 
-The custom-collected video dataset and the final trained model weights (`.pt` files) are not included in this repository due to their large size. If you are interested in accessing these assets for research, collaboration, or evaluation purposes, please reach out.
+- **Tesseract OCR**. `utils/ocr.py` hard‑codes `C:\Program Files\Tesseract-OCR\tesseract.exe`, so change it on other systems.
+- A CUDA GPU is recommended, but the code falls back to the CPU.
+- Place the weights in `models/` and the video in `video-data/`.
 
-- **Email**: `muhammetaliyoldar@gmail.com`
-- **LinkedIn**: `https://www.linkedin.com/in/muhammet-ali-yoldar/`
+## Usage
+
+All scripts use **absolute Windows paths** (`C:\Users\muham\PycharmProjects\the_eye_of_god-v1.1\...`) for the video, the output and the weights. Edit `SOURCE_VIDEO_PATH`, `TARGET_VIDEO_PATH` and the model paths at the top of each script first.
+
+```bash
+python main.py                                  # full pipeline (fix the syntax errors first, see below)
+python app-2.py                                 # plate + traffic light + speed demo, press q to quit
+python show/speed-show.py                       # speed / classification demo
+python show/lisenceplate-trafficlight-show.py   # plate / traffic-light demo
+python show/coordinate_picker.py                # pick calibration points
+```
+
+The output videos are written to `outputs/` or `show/*-output/`, and the evidence is saved under `outputs/ihlal_kayitlari/`.
+
+## Project Status
+
+- Development took place between **6 and 10 June 2025** (11 commits), and there has been no further activity since.
+- The committed `main.py` does not compile. Line 1 reads `qimport cv2` instead of `import cv2`, and the `try:` block around `sv.VideoInfo.from_video_path` (around line 153) is mis‑indented. `show/speed-show.py` also has a syntax error near line 92. `app-2.py` and `show/lisenceplate-trafficlight-show.py` compile.
+- `app.py` is intentionally git‑ignored ("application files that should not be public").
+- `PRD.md` describes the target product and its roadmap: multi‑camera support, a web dashboard, more violation types and cloud deployment. These items are **not** implemented.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details. 
+
+MIT, see [LICENSE](LICENSE).
